@@ -21,29 +21,29 @@ class _MyHomePageState extends State<HomeScreen> {
   ScrollController _scrollController;
 
   int _currentIndex = 0;
-  bool _showToolbar;
+  bool _showBottomNavBar;
 
   List<StoryType> get _tabs => StoryType.values;
 
   @override
   void initState() {
     _scrollController = ScrollController();
-    _showToolbar = true;
+    _showBottomNavBar = true;
     _scrollController.addListener(() {
       if (_scrollController.position.userScrollDirection ==
           ScrollDirection.reverse) {
-        if (_showToolbar) {
+        if (_showBottomNavBar) {
           setState(() {
-            _showToolbar = false;
+            _showBottomNavBar = false;
           });
         }
       }
 
       if (_scrollController.position.userScrollDirection ==
           ScrollDirection.forward) {
-        if (!_showToolbar) {
+        if (!_showBottomNavBar) {
           setState(() {
-            _showToolbar = true;
+            _showBottomNavBar = true;
           });
         }
       }
@@ -74,36 +74,47 @@ class _MyHomePageState extends State<HomeScreen> {
       );
     }
     final type = _tabs[_currentIndex];
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: UserActionsListener(
-        child: BlocProvider<StoriesCubit>(
-          create: (context) => StoriesCubit(
-            RepositoryProvider.of<StoriesRepository>(context),
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(
+        maintainBottomViewPadding: true,
+        top: false,
+        bottom: _showBottomNavBar,
+        right: false,
+        left: false,
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: UserActionsListener(
+            child: BlocProvider<StoriesCubit>(
+              create: (context) => StoriesCubit(
+                RepositoryProvider.of<StoriesRepository>(context),
+              ),
+              child: StoriesTab(
+                key: ValueKey(type.toString()),
+                storyType: type,
+                scrollController: _scrollController,
+              ),
+            ),
           ),
-          child: StoriesTab(
-            key: ValueKey(type.toString()),
-            storyType: type,
-            scrollController: _scrollController,
+          bottomNavigationBar: AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            height: _showBottomNavBar ? kBottomNavigationBarHeight : 0.0,
+            child: BottomNavigationBar(
+              items: _navigationBarItems,
+              selectedLabelStyle: GoogleFonts.rubik(),
+              unselectedLabelStyle: GoogleFonts.rubik(),
+              elevation: 0.0,
+              backgroundColor: Theme.of(context).backgroundColor,
+              selectedItemColor: Theme.of(context).accentColor,
+              unselectedItemColor: Theme.of(context).unselectedWidgetColor,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              currentIndex: _currentIndex,
+              onTap: (index) => _currentIndex != index
+                  ? setState(() => _currentIndex = index)
+                  : null,
+            ),
           ),
-        ),
-      ),
-      bottomNavigationBar: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        height: _showToolbar ? kBottomNavigationBarHeight : 0.0,
-        child: BottomNavigationBar(
-          items: _navigationBarItems,
-          selectedLabelStyle: GoogleFonts.rubik(),
-          unselectedLabelStyle: GoogleFonts.rubik(),
-          elevation: 4.0,
-          selectedItemColor: Theme.of(context).accentColor,
-          unselectedItemColor: Theme.of(context).unselectedWidgetColor,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          currentIndex: _currentIndex,
-          onTap: (index) => _currentIndex != index
-              ? setState(() => _currentIndex = index)
-              : null,
         ),
       ),
     );
